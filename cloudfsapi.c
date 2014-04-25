@@ -556,7 +556,7 @@ int cloudfs_connect()
   curl_easy_setopt(curl, CURLOPT_USERAGENT, USER_AGENT);
   curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
   curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, verify_ssl);
-  curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, verify_ssl);
+  curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, verify_ssl ? 2 : 0);
   curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10);
   curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10);
   curl_easy_setopt(curl, CURLOPT_FORBID_REUSE, 1);
