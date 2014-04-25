@@ -532,11 +532,9 @@ int safe_json_string(json_object *jobj, char *buffer, char *name)
 int cloudfs_connect()
 {
   #define HUBIC_TOKEN_URL     "https://api.hubic.com/oauth/token"
-  #define HUBIC_AUTH_URL      "https://api.hubic.com/oauth/auth"
   #define HUBIC_CRED_URL      "https://api.hubic.com/1.0/account/credentials"
   #define HUBIC_CLIENT_ID     (options.client_id)
   #define HUBIC_CLIENT_SECRET (options.client_secret)
-  #define HUBIC_REDIRECT_URI  (options.redirect_uri)
   #define HUBIC_USERNAME      (options.username)
   #define HUBIC_PASSWORD      (options.password)
   #define HUBIC_OPTIONS_SIZE  2048
@@ -568,7 +566,7 @@ int cloudfs_connect()
   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writefunc_string);
 
   /* Step 1 : request a token */
-
+  /*
   char oauthid[HUBIC_OPTIONS_SIZE];
   char auth_code[HUBIC_OPTIONS_SIZE];
 
@@ -601,14 +599,15 @@ int cloudfs_connect()
 
   debugf ("HUBIC oauthid = '%s'\n", oauthid);
   free(json_str);
+  */
 
   /* Step 2 : get request code */
-
+  /*
   sprintf(payload, "oauth=%s&usage=r&account=r&getAllLinks=r&credentials=r&activate=w&links=r&action=accepted&login=%s&user_pwd=%s&links=w&links=d", oauthid, curl_escape(HUBIC_USERNAME,0), curl_escape(HUBIC_PASSWORD,0));
 
   curl_easy_setopt(curl, CURLOPT_URL, HUBIC_AUTH_URL);
   curl_easy_setopt(curl, CURLOPT_POST, 1L);
-  curl_easy_setopt(curl, CURLOPT_HEADER, 1); /* headers needed to get the Location */
+  curl_easy_setopt(curl, CURLOPT_HEADER, 1); // headers needed to get the Location
   curl_easy_setopt(curl, CURLOPT_POSTFIELDS, payload);
   curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, strlen(payload));
 
@@ -633,13 +632,15 @@ int cloudfs_connect()
 
   free(json_str);
   debugf ("HUBIC auth_code = '%s'\n", auth_code);
+  */
 
-  /* Step 3 : get access token */
+  /* Step 1 : get access token */
 
-  sprintf(payload, "code=%s&redirect_uri=%s&grant_type=authorization_code", auth_code, curl_escape(HUBIC_REDIRECT_URI,0));
+  sprintf(payload, "grant_type=password&scope=usage.r,account.r,credentials.r&username=%s&password=%s", curl_escape(HUBIC_USERNAME, 0), curl_escape(HUBIC_PASSWORD, 0));
 
   curl_easy_setopt(curl, CURLOPT_URL, HUBIC_TOKEN_URL);
   curl_easy_setopt(curl, CURLOPT_POST, 1L);
+
   curl_easy_setopt(curl, CURLOPT_HEADER, 0);
 
   curl_easy_setopt(curl, CURLOPT_POSTFIELDS, payload);
@@ -649,8 +650,8 @@ int cloudfs_connect()
   curl_easy_setopt(curl, CURLOPT_PASSWORD, HUBIC_CLIENT_SECRET);
   curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
 
-  json_str = htmlStringGet(curl);
-  json_obj = json_tokener_parse(json_str);
+  char *json_str = htmlStringGet(curl);
+  struct json_object *json_obj = json_tokener_parse(json_str);
   debugf ("HUBIC TOKEN_URL result: '%s'\n", json_str);
   free(json_str);
 
@@ -667,7 +668,7 @@ int cloudfs_connect()
   debugf ("HUBIC Token type  : %s\n", token_type);
   debugf ("HUBIC Expire in   : %d\n", expire_sec);
 
-  /* Step 4 : request OpenStack storage URL */
+  /* Step 2 : request OpenStack storage URL */
 
   curl_easy_setopt(curl, CURLOPT_URL, HUBIC_CRED_URL);
   curl_easy_setopt(curl, CURLOPT_POST, 0L);
@@ -675,7 +676,7 @@ int cloudfs_connect()
   curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_NONE);
 
   /* create the Bearer authentication header */
-  curl_slist *headers = NULL;
+  struct curl_slist *headers = NULL;
   sprintf (payload, "Bearer %s", access_token);
   add_header(&headers, "Authorization", payload);
   curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
